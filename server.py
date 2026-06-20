@@ -141,12 +141,12 @@ def get_real_distance(origin_text, destination_text):
 
         coord_str = "%s,%s;%s,%s" % (coords[0][0], coords[0][1], coords[1][0], coords[1][1])
         url = ("https://api.mapbox.com/directions-matrix/v1/mapbox/driving/%s"
-               "?sources=0&destinations=1&annotations=distance&access_token=%s"
+               "?annotations=distance&access_token=%s"
                % (coord_str, MAPBOX_ACCESS_TOKEN))
         req = urllib.request.Request(url, headers={"User-Agent": "LuxlaneServer"})
         with urllib.request.urlopen(req, timeout=6) as resp:
             matrix = json.loads(resp.read().decode())
-        meters = matrix["distances"][0][0]
+        meters = matrix["distances"][0][1]
         if meters is None:
             return None
         return meters / 1000.0
