@@ -12,15 +12,10 @@ const LS_USER = 'luxlane_user';
 
 /* ---------- FLEET DATA ---------- */
 const FLEET = [
-  { id: 1, name: 'Executive Sedan', category: 'Business Class', class: 'business', seats: 3, luggage: 3, base: 65, perKm: 2.2, badge: 'Popular', amenities: ['Wi-Fi', 'Charger', 'Water', 'Mints'], emoji: '🚗', image: 'assets/img/sedan.jpg', desc: 'Lincoln Continental or similar. The benchmark for business travel — refined, comfortable, effortlessly professional.' },
-  { id: 2, name: 'Premium Sedan', category: 'Business Class', class: 'business', seats: 3, luggage: 3, base: 70, perKm: 2.3, badge: null, amenities: ['Wi-Fi', 'Charger', 'Water'], emoji: '🚗', image: 'assets/img/sedan.jpg', desc: 'A polished executive sedan for airport runs and city meetings across the GTA.' },
-  { id: 3, name: 'First Class Sedan', category: 'First Class', class: 'first', seats: 3, luggage: 4, base: 110, perKm: 3.5, badge: 'First Class', amenities: ['Wi-Fi', 'Charger', 'Water', 'Press', 'Amenity Kit'], emoji: '🚘', image: 'assets/img/sedan.jpg', desc: 'The pinnacle of automotive luxury — premium leather, ambient lighting, and a whisper-quiet cabin.' },
-  { id: 4, name: 'Luxury Sedan', category: 'First Class', class: 'first', seats: 3, luggage: 4, base: 115, perKm: 3.6, badge: 'First Class', amenities: ['Wi-Fi', 'Charger', 'Water', 'Press'], emoji: '🚘', image: 'assets/img/sedan.jpg', desc: 'Executive rear seating and a serene ride for VIP guests and long-distance comfort.' },
-  { id: 5, name: 'Mercedes Sprinter Van', category: 'Business Van', class: 'van', seats: 12, luggage: 10, base: 95, perKm: 2.8, badge: 'Groups', amenities: ['Wi-Fi', 'Chargers', 'Water', 'Reclining Seats'], emoji: '🚐', image: 'assets/img/sprinter.jpg', desc: 'Spacious and premium — perfect for groups, families, corporate teams, and airport runs with extra luggage.' },
-  { id: 6, name: 'Tesla Model S', category: 'Electric', class: 'electric', seats: 3, luggage: 3, base: 90, perKm: 2.5, badge: 'Electric', amenities: ['Wi-Fi', 'Charger', 'Water', 'Autopilot'], emoji: '⚡', image: 'assets/img/sedan.jpg', desc: 'Zero emissions, full luxury. A whisper-silent ride with cutting-edge technology throughout.' },
-  { id: 7, name: 'Luxury SUV', category: 'SUV', class: 'suv', seats: 6, luggage: 5, base: 135, perKm: 3.8, badge: 'SUV', amenities: ['Wi-Fi', 'Charger', 'Water', 'Privacy Glass'], emoji: '🚙', image: 'assets/img/suv.jpg', desc: 'Commanding presence and ultimate comfort — preferred for families, ski trips, and high-profile arrivals.' },
-  { id: 8, name: 'Cadillac Escalade', category: 'SUV', class: 'suv', seats: 6, luggage: 6, base: 145, perKm: 3.9, badge: 'SUV', amenities: ['Wi-Fi', 'Charger', 'Water', 'Entertainment'], emoji: '🚙', image: 'assets/img/suv.jpg', desc: 'American luxury at its most iconic. A statement vehicle for any occasion.' },
-  { id: 9, name: 'Stretch Limousine', category: 'Limousine', class: 'limo', seats: 8, luggage: 4, base: 160, perKm: 4.2, badge: 'Events', amenities: ['Bar', 'Lighting', 'Sound System', 'Privacy'], emoji: '🥂', image: 'assets/img/limo.jpg', desc: 'Stretch limo for weddings, proms, and nights out — arrive in unforgettable style.' },
+  { id: 1, name: 'Executive Sedan', category: 'Sedan', class: 'sedan', seats: 3, luggage: 3, base: 65, perKm: 2.2, badge: 'Popular', amenities: ['Wi-Fi', 'Charger', 'Water', 'Mints'], emoji: '🚗', image: 'assets/img/sedan.jpg', desc: 'Lincoln Continental or similar — refined, comfortable, and effortlessly professional. Ideal for airport runs and city meetings.' },
+  { id: 2, name: 'Luxury SUV', category: 'SUV', class: 'suv', seats: 6, luggage: 5, base: 135, perKm: 3.8, badge: 'Spacious', amenities: ['Wi-Fi', 'Charger', 'Water', 'Privacy Glass'], emoji: '🚙', image: 'assets/img/suv.jpg', desc: 'Cadillac Escalade or similar — commanding presence with room for the whole group and luggage to spare.' },
+  { id: 3, name: 'Mercedes Sprinter Van', category: 'Group Van', class: 'van', seats: 12, luggage: 10, base: 95, perKm: 2.8, badge: 'Groups', amenities: ['Wi-Fi', 'Chargers', 'Water', 'Reclining Seats'], emoji: '🚐', image: 'assets/img/sprinter.jpg', desc: 'Perfect for groups, families, and corporate teams — up to 12 passengers in premium comfort.' },
+  { id: 4, name: 'Stretch Limousine', category: 'Limousine', class: 'limo', seats: 8, luggage: 4, base: 160, perKm: 4.2, badge: 'Events', amenities: ['Bar', 'Lighting', 'Sound System', 'Privacy'], emoji: '🥂', image: 'assets/img/limo.jpg', desc: 'Stretch limo for weddings, proms, and nights out — arrive in unforgettable style.' },
 ];
 
 const SERVICE_LABELS = { airport: 'Airport Transfer', hourly: 'Hourly Hire', intercity: 'Intercity', city: 'City Transfer' };
@@ -157,23 +152,16 @@ function fleetCardHome(v) {
     </div>`;
 }
 
-function renderHomeFleet(classFilter) {
+function renderHomeFleet() {
   const grid = document.getElementById('fleetGrid');
   if (!grid) return;
-  const filtered = FLEET.filter(v => v.class === classFilter).slice(0, 3);
-  grid.innerHTML = filtered.map(fleetCardHome).join('');
+  grid.innerHTML = FLEET.map(fleetCardHome).join('');
   grid.querySelectorAll('.fade-up').forEach(el => setTimeout(() => el.classList.add('visible'), 60));
 }
 
 function initHomeFleet() {
-  const tabs = document.querySelectorAll('.fleet-tab');
-  if (!tabs.length) return;
-  renderHomeFleet('business');
-  tabs.forEach(tab => tab.addEventListener('click', () => {
-    tabs.forEach(t => t.classList.remove('active'));
-    tab.classList.add('active');
-    renderHomeFleet(tab.dataset.fleet);
-  }));
+  if (!document.getElementById('fleetGrid')) return;
+  renderHomeFleet();
 }
 
 function renderFullFleet(filter) {
@@ -989,6 +977,75 @@ async function validateSession() {
 /* =====================================================
    INIT
    ===================================================== */
+/* =====================================================
+   ADDRESS AUTOCOMPLETE (Mapbox)
+   Activates only when a public Mapbox token is configured;
+   otherwise the fields stay plain text boxes.
+   ===================================================== */
+async function initAddressAutocomplete() {
+  let token = '';
+  try { const c = await fetch('/api/config').then(r => r.json()); token = c.mapboxToken || ''; } catch (e) {}
+  if (!token) return; // graceful: no token -> normal text inputs
+
+  ['pickup', 'dropoff'].forEach(id => attachAutocomplete(document.getElementById(id), token));
+  const hero = document.getElementById('heroBookingForm');
+  if (hero) {
+    const ins = hero.querySelectorAll('.form-control');
+    attachAutocomplete(ins[0], token);
+    attachAutocomplete(ins[1], token);
+  }
+}
+
+function attachAutocomplete(input, token) {
+  if (!input || input.dataset.acAttached) return;
+  input.dataset.acAttached = '1';
+  input.setAttribute('autocomplete', 'off');
+  const wrap = input.closest('.form-group') || input.parentElement;
+  const dd = document.createElement('div');
+  dd.className = 'ac-dropdown';
+  wrap.appendChild(dd);
+
+  let timer = null, items = [], active = -1;
+  const close = () => { dd.classList.remove('open'); dd.innerHTML = ''; items = []; active = -1; };
+  const paint = () => dd.querySelectorAll('.ac-item').forEach((el, i) => el.classList.toggle('active', i === active));
+  const choose = (i) => {
+    if (items[i]) { input.value = items[i]; input.dispatchEvent(new Event('input', { bubbles: true })); }
+    close();
+  };
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim();
+    clearTimeout(timer);
+    if (q.length < 3) { close(); return; }
+    timer = setTimeout(async () => {
+      try {
+        const url = 'https://api.mapbox.com/geocoding/v5/mapbox.places/' + encodeURIComponent(q) +
+          '.json?access_token=' + token + '&autocomplete=true&limit=5&country=ca,us' +
+          '&types=address,place,poi,postcode,locality,neighborhood';
+        const data = await fetch(url).then(r => r.json());
+        items = (data.features || []).map(f => f.place_name);
+        if (!items.length) { close(); return; }
+        dd.innerHTML = items.map((p, i) =>
+          '<div class="ac-item" data-i="' + i + '">📍 ' + p.replace(/</g, '&lt;') + '</div>').join('');
+        dd.classList.add('open'); active = -1;
+      } catch (e) { close(); }
+    }, 250);
+  });
+
+  dd.addEventListener('mousedown', (e) => {
+    const it = e.target.closest('.ac-item');
+    if (it) { e.preventDefault(); choose(+it.dataset.i); }
+  });
+  input.addEventListener('keydown', (e) => {
+    if (!dd.classList.contains('open')) return;
+    if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(active + 1, items.length - 1); paint(); }
+    else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(active - 1, 0); paint(); }
+    else if (e.key === 'Enter' && active >= 0) { e.preventDefault(); choose(active); }
+    else if (e.key === 'Escape') { close(); }
+  });
+  input.addEventListener('blur', () => setTimeout(close, 150));
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initChrome();
   injectAuthUI();
@@ -997,6 +1054,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFleetPage();
   initBookingPage();
   renderTrips();
+  initAddressAutocomplete();
 });
 
 // Expose handlers used by inline onclick/onsubmit

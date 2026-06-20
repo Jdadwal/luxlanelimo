@@ -60,14 +60,9 @@ EMAIL_FROM = os.environ.get("EMAIL_FROM", "Luxlane <no-reply@luxlane.example>").
 # Pricing source of truth — must mirror assets/js/app.js FLEET base/perKm.
 FLEET = {
     1: {"name": "Executive Sedan", "base": 65, "perKm": 2.2},
-    2: {"name": "Premium Sedan", "base": 70, "perKm": 2.3},
-    3: {"name": "First Class Sedan", "base": 110, "perKm": 3.5},
-    4: {"name": "Luxury Sedan", "base": 115, "perKm": 3.6},
-    5: {"name": "Mercedes Sprinter Van", "base": 95, "perKm": 2.8},
-    6: {"name": "Tesla Model S", "base": 90, "perKm": 2.5},
-    7: {"name": "Luxury SUV", "base": 135, "perKm": 3.8},
-    8: {"name": "Cadillac Escalade", "base": 145, "perKm": 3.9},
-    9: {"name": "Stretch Limousine", "base": 160, "perKm": 4.2},
+    2: {"name": "Luxury SUV", "base": 135, "perKm": 3.8},
+    3: {"name": "Mercedes Sprinter Van", "base": 95, "perKm": 2.8},
+    4: {"name": "Stretch Limousine", "base": 160, "perKm": 4.2},
 }
 SERVICE_LABELS = {
     "airport": "Airport Transfer", "hourly": "Hourly Hire",
@@ -329,7 +324,7 @@ def seed_demo_rides():
          "pickup": "JFK International Airport, Terminal 4",
          "dropoff": "The Plaza Hotel, 5th Avenue, Manhattan",
          "dateISO": "2026-06-19T15:30", "passengers": "2",
-         "vehicle": "First Class Sedan", "vehicleEmoji": "🚘", "distance": 32,
+         "vehicle": "Luxury SUV", "vehicleEmoji": "🚙", "distance": 32,
          "total": 255.30, "passenger": "Marcus Reynolds", "phone": "+1 555 0142"},
         {"ref": "LX-DEMO02", "service": "City Transfer", "serviceKey": "city",
          "pickup": "Wall Street, Financial District",
@@ -529,6 +524,9 @@ class Handler(SimpleHTTPRequestHandler):
                                "distances": "mapbox" if MAPBOX_ACCESS_TOKEN else "estimate",
                                "storage": "postgres" if _DB_ENABLED else "file",
                                "email": "smtp" if SMTP_HOST else "log",
+                               # Only public (pk.) tokens are exposed to the browser
+                               # for address autocomplete; secret tokens are never sent.
+                               "mapboxToken": MAPBOX_ACCESS_TOKEN if MAPBOX_ACCESS_TOKEN.startswith("pk.") else "",
                                "auth": True})
         return super().do_GET()
 
