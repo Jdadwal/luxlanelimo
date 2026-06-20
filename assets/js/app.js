@@ -1055,6 +1055,13 @@ document.addEventListener('DOMContentLoaded', () => {
   initBookingPage();
   renderTrips();
   initAddressAutocomplete();
+  // Load the AI concierge widget on every page that includes app.js
+  if (!document.querySelector('script[src*="concierge.js"]')) {
+    var s = document.createElement('script');
+    s.src = 'assets/js/concierge.js';
+    s.defer = true;
+    document.body.appendChild(s);
+  }
 });
 
 // Expose handlers used by inline onclick/onsubmit

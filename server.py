@@ -55,7 +55,19 @@ SMTP_HOST = os.environ.get("SMTP_HOST", "").strip()
 SMTP_PORT = int(os.environ.get("SMTP_PORT", "587"))
 SMTP_USER = os.environ.get("SMTP_USER", "").strip()
 SMTP_PASS = os.environ.get("SMTP_PASS", "").strip()
-EMAIL_FROM = os.environ.get("EMAIL_FROM", "Luxlane <no-reply@luxlane.example>").strip()
+EMAIL_FROM = os.environ.get("EMAIL_FROM", "Luxlane Limo <reserve@luxlanelimo.ca>").strip()
+
+# Business contact details (shown on the site + used by the concierge).
+COMPANY_NAME = os.environ.get("COMPANY_NAME", "Luxlane Limo").strip()
+COMPANY_EMAIL = os.environ.get("COMPANY_EMAIL", "reserve@luxlanelimo.ca").strip()
+COMPANY_PHONE = os.environ.get("COMPANY_PHONE", "+1 (416) 676-2669").strip()
+COMPANY_PHONE_E164 = os.environ.get("COMPANY_PHONE_E164", "+14166762669").strip()
+WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "14166762669").strip()
+
+# AI concierge. With a key it answers via Claude; without one it uses scripted
+# replies, so the concierge works either way. (anthropic SDK imported lazily.)
+ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
+CONCIERGE_MODEL = os.environ.get("CONCIERGE_MODEL", "claude-opus-4-8").strip()
 
 # Pricing source of truth — must mirror assets/js/app.js FLEET base/perKm.
 FLEET = {
@@ -457,6 +469,114 @@ def send_email(to, subject, body):
         print("[email] send failed (%s)" % e, flush=True)
 
 
+# ---------------------------------------------------------------- concierge
+def business_facts():
+    return (
+        "%s is a premium chauffeur service covering the Greater Toronto Area, "
+        "Niagara, and cross-border trips to/from the USA. Available 24/7.\n\n"
+        "SERVICES: Airport transfers (Pearson YYZ, Billy Bishop, Buffalo) with flight "
+        "tracking and free wait time; Cross-border trips between Canada and the USA; "
+        "Niagara Falls & wine tours; Corporate travel; Weddings & limousines; Night out.\n\n"
+        "FLEET & FLAT 'FROM' RATES: Executive Sedan (3 passengers) from $65; "
+        "Luxury SUV (6 passengers) from $135; Mercedes Sprinter Van (12 passengers) from $95; "
+        "Stretch Limousine (8 passengers) from $160. Prices are fixed/flat with no surge; "
+        "final price depends on distance and is shown before payment.\n\n"
+        "BOOKING: Customers book online via the 'Book Now' page — instant fixed quote, "
+        "choose a vehicle, pay securely. A 15%% deposit secures the reservation; free "
+        "cancellation up to 24 hours before pick-up.\n\n"
+        "CONTACT: phone %s, WhatsApp %s, email %s."
+        % (COMPANY_NAME, COMPANY_PHONE, COMPANY_PHONE, COMPANY_EMAIL)
+    )
+
+
+def scripted_concierge(message):
+    """Keyword-based answers — used when no Anthropic key is configured."""
+    m = (message or "").lower()
+    contact = "Call %s, WhatsApp %s, or email %s." % (COMPANY_PHONE, COMPANY_PHONE, COMPANY_EMAIL)
+
+    def has(*words):
+        return any(w in m for w in words)
+
+    if has("hi", "hello", "hey", "good morning", "good evening"):
+        return "Hi! I'm the %s concierge. I can help with rates, our fleet, airport and cross-border trips, Niagara tours, and booking. What do you need?" % COMPANY_NAME
+    if has("price", "rate", "cost", "how much", "quote", "fare"):
+        return ("Our flat 'from' rates: Executive Sedan from $65, Mercedes Sprinter Van from $95, "
+                "Luxury SUV from $135, Stretch Limousine from $160. Prices are fixed with no surge — "
+                "you'll see the exact price (based on distance) before you pay. Get an instant quote on the Book Now page.")
+    if has("vehicle", "fleet", "car", "suv", "sedan", "van", "sprinter", "limo", "seats", "passengers"):
+        return ("Our fleet: Executive Sedan (up to 3), Luxury SUV (up to 6), Mercedes Sprinter Van (up to 12), "
+                "and a Stretch Limousine (up to 8) for weddings and nights out. All are late-model, immaculate, "
+                "and driven by professional chauffeurs.")
+    if has("airport", "pearson", "yyz", "billy bishop", "buffalo", "flight"):
+        return ("Yes — we do airport transfers to/from Pearson (YYZ), Billy Bishop, and Buffalo, with real-time "
+                "flight tracking and complimentary wait time. Book on the Book Now page or " + contact)
+    if has("border", "usa", "u.s", "united states", "cross", "customs"):
+        return ("We specialize in cross-border trips between Canada and the USA — door-to-door, private, and "
+                "stress-free at the border. " + contact)
+    if has("niagara", "falls", "wine", "tour"):
+        return ("We offer Niagara Falls and wine-country tours with a private chauffeur, at your pace, all day. " + contact)
+    if has("wedding", "prom", "event", "night out", "concert"):
+        return ("For weddings, proms, and nights out we have a stretch limousine and luxury sedans. "
+                "Tell us your date and we'll take care of the rest — " + contact)
+    if has("corporate", "business", "company", "account"):
+        return ("We handle corporate travel with reliable executive transport, centralized billing, and a dedicated "
+                "account manager. " + contact)
+    if has("book", "reserve", "reservation", "schedule"):
+        return ("Booking takes about 2 minutes: open the Book Now page, enter your trip, pick a vehicle, and pay. "
+                "A 15% deposit secures it, with free cancellation up to 24h before pick-up.")
+    if has("deposit", "pay", "payment", "card", "cancel", "refund"):
+        return ("A 15% deposit secures your reservation; the balance is due on the ride. Payments are processed "
+                "securely. Free cancellation up to 24 hours before pick-up.")
+    if has("area", "where", "service area", "region", "gta", "toronto", "ontario"):
+        return ("We cover the Greater Toronto Area, Niagara, and cross-border trips to/from the USA, 24/7.")
+    if has("contact", "phone", "call", "email", "whatsapp", "reach", "number"):
+        return contact
+    if has("hour", "open", "24", "available", "time", "when"):
+        return "We're available 24/7, 365 days a year. " + contact
+    return ("I can help with rates, our fleet, airport and cross-border trips, Niagara tours, weddings, and booking. "
+            "For anything specific, " + contact)
+
+
+def ai_concierge(message, history):
+    """Answer via Claude (prompt-cached system prompt). Returns None on failure
+    so the caller can fall back to scripted replies."""
+    if not ANTHROPIC_API_KEY:
+        return None
+    try:
+        import anthropic  # lazy — only needed when a key is configured
+    except Exception as e:  # noqa: BLE001
+        print("[concierge] anthropic SDK not installed (%s)" % e, flush=True)
+        return None
+    system_prompt = (
+        "You are the friendly, concise virtual concierge for " + COMPANY_NAME + ", a chauffeur "
+        "service. Answer customer questions using ONLY the facts below. Keep replies short "
+        "(1-3 sentences), warm, and helpful. Quote the 'from' rates but never invent an exact "
+        "total — tell them the Book Now page gives an instant fixed quote. If you don't know "
+        "something, share the contact details. Encourage booking when appropriate. "
+        "Reply in the customer's language.\n\n=== BUSINESS FACTS ===\n" + business_facts()
+    )
+    convo = []
+    for turn in (history or [])[-10:]:
+        role = turn.get("role")
+        content = (turn.get("content") or "").strip()
+        if role in ("user", "assistant") and content:
+            convo.append({"role": role, "content": content})
+    convo.append({"role": "user", "content": message})
+    try:
+        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        resp = client.messages.create(
+            model=CONCIERGE_MODEL,
+            max_tokens=400,
+            system=[{"type": "text", "text": system_prompt,
+                     "cache_control": {"type": "ephemeral"}}],
+            messages=convo,
+        )
+        return "".join(b.text for b in resp.content if b.type == "text").strip() or None
+    except Exception as e:  # noqa: BLE001
+        print("[concierge] Claude call failed (%s) — using scripted reply" % e, flush=True)
+        return None
+
+
 # ---------------------------------------------------------------- stripe api
 def stripe_post(path, data):
     body = urllib.parse.urlencode(data, doseq=True).encode()
@@ -527,7 +647,11 @@ class Handler(SimpleHTTPRequestHandler):
                                # Only public (pk.) tokens are exposed to the browser
                                # for address autocomplete; secret tokens are never sent.
                                "mapboxToken": MAPBOX_ACCESS_TOKEN if MAPBOX_ACCESS_TOKEN.startswith("pk.") else "",
-                               "auth": True})
+                               "auth": True,
+                               "concierge": "ai" if ANTHROPIC_API_KEY else "scripted",
+                               "company": {"name": COMPANY_NAME, "email": COMPANY_EMAIL,
+                                           "phone": COMPANY_PHONE, "phoneE164": COMPANY_PHONE_E164,
+                                           "whatsapp": WHATSAPP_NUMBER}})
         return super().do_GET()
 
     def do_POST(self):
@@ -549,6 +673,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self.handle_auth_login()
         if path == "/api/auth/logout":
             return self.handle_auth_logout()
+        if path == "/api/concierge":
+            return self.handle_concierge()
         if path == "/api/rides/accept":
             return self.handle_ride_accept()
         if path == "/api/rides/status":
@@ -683,15 +809,25 @@ class Handler(SimpleHTTPRequestHandler):
         with _BOOKINGS_LOCK:
             is_new = ref_key not in BOOKINGS
         rec = upsert_booking(data)
-        if is_new and rec.get("email"):
+        if is_new:
+            details = ("Reference: #%s\nService: %s\nPick-up: %s\nDrop-off: %s\n"
+                       "When: %s\nVehicle: %s\nPassengers: %s\nTotal: $%s"
+                       % (rec["ref"], rec.get("service", ""), rec.get("pickup", ""),
+                          rec.get("dropoff", ""), rec.get("dateISO", "TBD"),
+                          rec.get("vehicle", ""), rec.get("passengers", ""),
+                          rec.get("total", "")))
+            # Confirmation to the customer
+            if rec.get("email"):
+                send_email(
+                    rec["email"], "Your %s booking is confirmed (#%s)" % (COMPANY_NAME, rec["ref"]),
+                    "Hi %s,\n\nYour ride is confirmed.\n\n%s\n\n"
+                    "Track your chauffeur live from My Trips. Questions? Call %s or WhatsApp %s.\n\n— %s"
+                    % (rec.get("passenger", "there"), details, COMPANY_PHONE, COMPANY_PHONE, COMPANY_NAME))
+            # Notification to the reservations inbox
             send_email(
-                rec["email"], "Your Luxlane booking is confirmed (#%s)" % rec["ref"],
-                "Hi %s,\n\nYour ride is confirmed.\n\n"
-                "Reference: #%s\nService: %s\nPick-up: %s\nDrop-off: %s\nVehicle: %s\nTotal: $%s\n\n"
-                "You can track your chauffeur live from My Trips.\n\n— Luxlane"
-                % (rec.get("passenger", "there"), rec["ref"], rec.get("service", ""),
-                   rec.get("pickup", ""), rec.get("dropoff", ""), rec.get("vehicle", ""),
-                   rec.get("total", "")))
+                COMPANY_EMAIL, "New booking #%s — %s" % (rec["ref"], rec.get("service", "")),
+                "New reservation received.\n\n%s\n\nPassenger: %s\nEmail: %s\nPhone: %s"
+                % (details, rec.get("passenger", ""), rec.get("email", ""), rec.get("phone", "")))
         return self._json({"ok": True, "ref": rec["ref"]})
 
     def handle_list_rides(self):
@@ -766,6 +902,19 @@ class Handler(SimpleHTTPRequestHandler):
         if token:
             SESSIONS.pop(token, None)
         return self._json({"ok": True})
+
+    def handle_concierge(self):
+        data, _ = self._read_json()
+        message = (data.get("message") or "").strip()
+        history = data.get("history") or []
+        if not message:
+            return self._json({"error": "Empty message."}, 400)
+        reply = ai_concierge(message, history)
+        source = "ai"
+        if not reply:
+            reply = scripted_concierge(message)
+            source = "scripted"
+        return self._json({"reply": reply, "source": source})
 
     def handle_ride_accept(self):
         data, _ = self._read_json()

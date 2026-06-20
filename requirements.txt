@@ -1,4 +1,7 @@
-# Luxlane runs on the Python standard library for everything except the optional
-# Postgres backend. psycopg2-binary is only imported when DATABASE_URL is set,
-# so the app still runs with zero third-party packages when no database is used.
+# Luxlane runs on the Python standard library for everything except two optional
+# backends, each imported lazily so the app runs with zero third-party packages
+# when unused:
+#   psycopg2-binary  — only imported when DATABASE_URL is set (Postgres storage)
+#   anthropic        — only imported when ANTHROPIC_API_KEY is set (AI concierge)
 psycopg2-binary>=2.9
+anthropic>=0.40
