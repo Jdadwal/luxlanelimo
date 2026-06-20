@@ -1,0 +1,19 @@
+{
+  "name": "Luxlane Driver",
+  "short_name": "Luxlane Driver",
+  "description": "Accept and manage chauffeur rides.",
+  "start_url": "/driver.html",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a0a0a",
+  "theme_color": "#0a0a0a",
+  "icons": [
+    {
+      "src": "/assets/img/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -1,0 +1,118 @@
+/* ===========================
+   LUXLANE — LIVE TRACKING
+   (loads after style.css)
+   =========================== */
+
+html, body { height: 100%; }
+body { background: var(--black); overflow-x: hidden; }
+
+.track-app {
+  max-width: 520px;
+  margin: 0 auto;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  border-left: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+}
+
+.track-header {
+  display: flex; align-items: center; gap: 14px;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  background: var(--dark);
+  position: sticky; top: 0; z-index: 5;
+}
+.track-back { font-size: 1.3rem; color: var(--gray); cursor: pointer; line-height: 1; }
+.track-back:hover { color: var(--gold); }
+.track-header .ref { font-size: 0.72rem; color: var(--gray); }
+.track-header .ref b { color: var(--gold); display: block; font-size: 0.95rem; }
+.live-dot {
+  margin-left: auto; display: flex; align-items: center; gap: 7px;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase; color: #6ec878;
+}
+.live-dot .blip { width: 9px; height: 9px; border-radius: 50%; background: #6ec878; box-shadow: 0 0 0 0 rgba(110,200,120,0.6); animation: pulse 1.6s infinite; }
+@keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(110,200,120,0.5);} 70% { box-shadow: 0 0 0 10px rgba(110,200,120,0);} 100% { box-shadow: 0 0 0 0 rgba(110,200,120,0);} }
+
+/* ---- Map ---- */
+.track-map {
+  position: relative;
+  background: #0d0f12;
+  border-bottom: 1px solid var(--border);
+  overflow: hidden;
+}
+.track-map svg { display: block; width: 100%; height: auto; }
+
+.car-marker { transition: transform 1.2s linear; }
+.car-bubble {
+  filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
+}
+
+/* ---- Status block ---- */
+.track-body { flex: 1; padding: 20px; }
+
+.eta-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 22px;
+  margin-bottom: 16px;
+  text-align: center;
+}
+.eta-status { font-size: 0.95rem; color: var(--white); margin-bottom: 12px; font-weight: 500; }
+.eta-status .em { color: var(--gold); }
+.eta-num { font-size: 2.6rem; font-weight: 300; color: var(--gold); line-height: 1; }
+.eta-num small { font-size: 0.9rem; color: var(--gray); font-weight: 400; }
+.eta-prog { height: 6px; background: var(--dark-3); border-radius: 100px; margin-top: 18px; overflow: hidden; }
+.eta-prog .bar { height: 100%; background: linear-gradient(90deg, var(--gold-dark), var(--gold-light)); border-radius: 100px; width: 0%; transition: width 1.2s linear; }
+
+/* ---- Driver card ---- */
+.driver-card {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+.driver-avatar {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: var(--gold); color: var(--black);
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; font-size: 1.4rem; flex-shrink: 0;
+}
+.driver-info { flex: 1; min-width: 0; }
+.driver-info .name { font-weight: 600; font-size: 1.05rem; }
+.driver-info .meta { font-size: 0.8rem; color: var(--gray); margin-top: 2px; }
+.driver-info .plate {
+  display: inline-block; margin-top: 6px; font-size: 0.72rem; letter-spacing: 0.12em;
+  background: var(--dark-3); border: 1px solid var(--border); border-radius: 4px; padding: 2px 8px; color: var(--white);
+}
+.driver-call {
+  width: 46px; height: 46px; border-radius: 50%;
+  background: rgba(110,200,120,0.15); border: 1px solid rgba(110,200,120,0.4);
+  display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0;
+  transition: var(--transition);
+}
+.driver-call:hover { background: rgba(110,200,120,0.3); }
+.driver-call.disabled { opacity: 0.35; pointer-events: none; }
+
+/* ---- Route detail ---- */
+.route-detail {
+  background: var(--dark-2);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px;
+}
+.route-detail .row { display: grid; grid-template-columns: 18px 1fr; gap: 4px 12px; }
+.route-detail .pin { font-size: 0.85rem; }
+.route-detail .line { width: 1px; background: var(--border); margin: 3px auto; min-height: 18px; }
+.route-detail .addr { font-size: 0.9rem; padding-bottom: 12px; }
+.route-detail .addr small { display: block; font-size: 0.66rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.07em; margin-bottom: 2px; }
+
+.track-waiting, .track-done {
+  text-align: center; padding: 30px 20px;
+}
+.track-done .ic { font-size: 3.2rem; margin-bottom: 12px; }

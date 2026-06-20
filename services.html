@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Services — Luxlane</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><circle cx='16' cy='16' r='16' fill='%23c9a84c'/><text x='16' y='22' text-anchor='middle' font-size='18' font-weight='bold' fill='black'>L</text></svg>">
+  <style>
+    .service-hero-card {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      background: var(--dark-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 24px;
+      transition: var(--transition);
+    }
+    .service-hero-card:hover { border-color: var(--gold); }
+    .service-hero-card.reverse { direction: rtl; }
+    .service-hero-card.reverse > * { direction: ltr; }
+    .service-hero-card-body { padding: 48px; display: flex; flex-direction: column; justify-content: center; }
+    .service-hero-card-visual {
+      background: var(--dark-3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 6rem;
+      min-height: 280px;
+    }
+    .service-hero-card h3 { font-size: 1.6rem; font-weight: 400; margin-bottom: 16px; }
+    .service-hero-card p { color: var(--gray); line-height: 1.8; margin-bottom: 24px; font-size: 0.95rem; }
+    .service-feature-list { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .service-feature-list li {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 0.875rem; color: rgba(255,255,255,0.8);
+    }
+    .service-feature-list li::before { content: '✓'; color: var(--gold); font-weight: 700; flex-shrink: 0; }
+
+    .corporate-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .corp-card {
+      background: var(--dark-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 32px;
+      text-align: center;
+      transition: var(--transition);
+    }
+    .corp-card:hover { border-color: var(--gold); transform: translateY(-4px); }
+    .corp-card .icon { font-size: 2.5rem; margin-bottom: 16px; }
+    .corp-card h3 { font-size: 1.1rem; margin-bottom: 12px; }
+    .corp-card p { font-size: 0.875rem; color: var(--gray); line-height: 1.7; }
+
+    .pricing-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 48px; }
+    .pricing-card {
+      background: var(--dark-2);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 36px;
+      position: relative;
+      transition: var(--transition);
+    }
+    .pricing-card.featured {
+      border-color: var(--gold);
+      background: linear-gradient(180deg, rgba(201,168,76,0.08) 0%, var(--dark-2) 100%);
+    }
+    .pricing-card.featured::before {
+      content: 'Most Popular';
+      position: absolute;
+      top: -1px; left: 50%; transform: translateX(-50%);
+      background: var(--gold);
+      color: var(--black);
+      font-size: 0.7rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      padding: 4px 16px;
+      border-radius: 0 0 8px 8px;
+    }
+    .pricing-card h3 { font-size: 1.2rem; margin-bottom: 8px; }
+    .pricing-card .price { font-size: 2.5rem; font-weight: 300; color: var(--gold); line-height: 1; margin: 20px 0 4px; }
+    .pricing-card .price-note { font-size: 0.8rem; color: var(--gray); margin-bottom: 24px; }
+    .pricing-features { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+    .pricing-features li { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+    .pricing-features li::before { content: '✓'; color: var(--gold); font-weight: 700; }
+    .pricing-features li.na { color: var(--gray); }
+    .pricing-features li.na::before { content: '—'; color: var(--gray-dark); }
+
+    @media (max-width: 768px) {
+      .service-hero-card { grid-template-columns: 1fr; }
+      .service-hero-card.reverse { direction: ltr; }
+      .service-hero-card-visual { min-height: 160px; font-size: 4rem; }
+      .service-hero-card-body { padding: 28px; }
+      .corporate-grid { grid-template-columns: 1fr; }
+      .pricing-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar scrolled" id="navbar">
+  <div class="navbar-inner">
+    <a href="index.html" class="navbar-logo">
+      <div class="logo-icon">L</div>
+      LUXLANE
+    </a>
+    <ul class="navbar-nav">
+      <li><a href="index.html">Home</a></li>
+      <li><a href="services.html" class="active">Services</a></li>
+      <li><a href="fleet.html">Fleet</a></li>
+      <li><a href="booking.html">Book Now</a></li>
+      <li><a href="index.html#about">About</a></li>
+    </ul>
+    <div class="navbar-actions">
+      <a href="booking.html" class="btn btn-primary btn-sm">Book a Ride</a>
+    </div>
+    <div class="hamburger" id="hamburger">
+      <span></span><span></span><span></span>
+    </div>
+  </div>
+</nav>
+
+<!-- MOBILE MENU -->
+<div class="mobile-menu" id="mobileMenu">
+  <span class="mobile-close" id="mobileClose">✕</span>
+  <a href="index.html">Home</a>
+  <a href="services.html">Services</a>
+  <a href="fleet.html">Fleet</a>
+  <a href="booking.html">Book Now</a>
+  <a href="index.html#about">About</a>
+</div>
+
+<!-- PAGE HERO -->
+<div class="page-hero">
+  <div class="container">
+    <div class="section-label" style="justify-content:center;">What We Offer</div>
+    <h1>Services built for <span class="gold">excellence</span></h1>
+    <p>Tailored chauffeur solutions for individuals, executives, and enterprises worldwide.</p>
+  </div>
+</div>
+
+<!-- SERVICES DETAIL -->
+<section class="section">
+  <div class="container">
+
+    <!-- Airport Transfer -->
+    <div class="service-hero-card fade-up">
+      <div class="service-hero-card-body">
+        <div class="section-label">01 — Airport Transfer</div>
+        <h3>Stress-free <span class="gold">airport rides</span></h3>
+        <p>We monitor your flight in real time. If it's delayed, your chauffeur waits — at no extra cost. Complimentary waiting time of 60 minutes for international flights.</p>
+        <ul class="service-feature-list">
+          <li>Real-time flight tracking</li>
+          <li>60-min complimentary wait (international)</li>
+          <li>Meet &amp; greet at arrivals hall</li>
+          <li>Luggage assistance included</li>
+          <li>Fixed price, no traffic surcharges</li>
+        </ul>
+        <a href="booking.html" class="btn btn-primary">Book Airport Transfer</a>
+      </div>
+      <div class="service-hero-card-visual">✈️</div>
+    </div>
+
+    <!-- City Transfer -->
+    <div class="service-hero-card reverse fade-up">
+      <div class="service-hero-card-body">
+        <div class="section-label">02 — City Transfer</div>
+        <h3>Point-to-point <span class="gold">city rides</span></h3>
+        <p>Reliable, premium transport from any address to any destination within the city. Punctual chauffeurs, pristine vehicles, and a calm ride every time.</p>
+        <ul class="service-feature-list">
+          <li>Door-to-door service</li>
+          <li>15-min complimentary wait</li>
+          <li>Available 24/7, 365 days</li>
+          <li>Instant booking confirmation</li>
+          <li>In-app driver tracking</li>
+        </ul>
+        <a href="booking.html" class="btn btn-primary">Book City Ride</a>
+      </div>
+      <div class="service-hero-card-visual">🏙️</div>
+    </div>
+
+    <!-- Hourly Hire -->
+    <div class="service-hero-card fade-up">
+      <div class="service-hero-card-body">
+        <div class="section-label">03 — Hourly Hire</div>
+        <h3>Your chauffeur, <span class="gold">by the hour</span></h3>
+        <p>Book a dedicated chauffeur for 2 to 12 hours. Ideal for multi-stop meetings, events, or when your schedule requires ultimate flexibility.</p>
+        <ul class="service-feature-list">
+          <li>Minimum 2 hours</li>
+          <li>Multiple stops included</li>
+          <li>Change plans on the go</li>
+          <li>No extra charge for waiting</li>
+          <li>Dedicated chauffeur throughout</li>
+        </ul>
+        <a href="booking.html" class="btn btn-primary">Book by the Hour</a>
+      </div>
+      <div class="service-hero-card-visual">🕐</div>
+    </div>
+
+    <!-- Intercity -->
+    <div class="service-hero-card reverse fade-up">
+      <div class="service-hero-card-body">
+        <div class="section-label">04 — Intercity</div>
+        <h3>Between cities, <span class="gold">in comfort</span></h3>
+        <p>Why fly short-haul when you can travel city-to-city in a private, quiet cabin? Work, rest, or simply enjoy the journey — we handle everything.</p>
+        <ul class="service-feature-list">
+          <li>Direct routes, no stops</li>
+          <li>Wi-Fi &amp; charging available</li>
+          <li>Privacy screen on request</li>
+          <li>Fixed, transparent pricing</li>
+          <li>Available across Europe &amp; North America</li>
+        </ul>
+        <a href="booking.html" class="btn btn-primary">Book Intercity</a>
+      </div>
+      <div class="service-hero-card-visual">🗺️</div>
+    </div>
+
+    <!-- Events -->
+    <div class="service-hero-card fade-up">
+      <div class="service-hero-card-body">
+        <div class="section-label">05 — Events &amp; Occasions</div>
+        <h3>Arrive in <span class="gold">style</span></h3>
+        <p>Make an impression at weddings, galas, premieres, and corporate events. We coordinate transport for individuals and entire groups.</p>
+        <ul class="service-feature-list">
+          <li>Curated vehicle selection</li>
+          <li>Group coordination available</li>
+          <li>Red-carpet experience</li>
+          <li>Dedicated event concierge</li>
+          <li>Champagne &amp; amenities on request</li>
+        </ul>
+        <a href="booking.html" class="btn btn-primary">Book for an Event</a>
+      </div>
+      <div class="service-hero-card-visual">🎉</div>
+    </div>
+
+  </div>
+</section>
+
+<!-- CORPORATE SECTION -->
+<section class="section" style="background:var(--dark-2);border-top:1px solid var(--border);">
+  <div class="container">
+    <div class="text-center fade-up">
+      <div class="section-label" style="justify-content:center;">For Business</div>
+      <h2>Corporate <span class="gold">travel management</span></h2>
+      <p class="text-gray" style="max-width:520px;margin:16px auto 0;line-height:1.8;">A complete business travel solution trusted by 5,000+ companies globally. Streamline, control, and elevate your team's travel.</p>
+    </div>
+
+    <div class="corporate-grid fade-up">
+      <div class="corp-card">
+        <div class="icon">🧾</div>
+        <h3>Centralized Billing</h3>
+        <p>One monthly invoice for all rides. Detailed cost center reporting for finance and accounting teams.</p>
+      </div>
+      <div class="corp-card">
+        <div class="icon">📊</div>
+        <h3>Travel Dashboard</h3>
+        <p>Full visibility into team travel. Book on behalf of others, view all active rides, and download reports.</p>
+      </div>
+      <div class="corp-card">
+        <div class="icon">🤝</div>
+        <h3>Account Manager</h3>
+        <p>A dedicated point of contact for your business. Available to assist with last-minute changes and custom needs.</p>
+      </div>
+      <div class="corp-card">
+        <div class="icon">🔐</div>
+        <h3>Policy Controls</h3>
+        <p>Set travel policies, spending limits, and approval workflows for your organization.</p>
+      </div>
+      <div class="corp-card">
+        <div class="icon">🌐</div>
+        <h3>Global Coverage</h3>
+        <p>One platform, one account — for all your business travel in 50+ countries and 750+ cities.</p>
+      </div>
+      <div class="corp-card">
+        <div class="icon">⚡</div>
+        <h3>API Integration</h3>
+        <p>Connect Luxlane directly with your travel management system, HR software, or expense platform.</p>
+      </div>
+    </div>
+
+    <div style="text-align:center;margin-top:48px;" class="fade-up">
+      <a href="booking.html" class="btn btn-primary btn-lg">Get a Corporate Quote</a>
+      <a href="#" class="btn btn-outline btn-lg" style="margin-left:16px;">Download Brochure</a>
+    </div>
+  </div>
+</section>
+
+<!-- PRICING -->
+<section class="section">
+  <div class="container">
+    <div class="text-center fade-up">
+      <div class="section-label" style="justify-content:center;">Pricing</div>
+      <h2>Simple, <span class="gold">transparent</span> pricing</h2>
+      <p class="text-gray" style="max-width:480px;margin:16px auto 0;line-height:1.8;">No hidden fees. No surge pricing. Just fixed fares and professional service.</p>
+    </div>
+
+    <div class="pricing-grid fade-up">
+      <div class="pricing-card">
+        <div class="section-label">Business Class</div>
+        <h3>Mercedes E-Class or similar</h3>
+        <div class="price">From $65</div>
+        <p class="price-note">per ride · fixed price</p>
+        <ul class="pricing-features">
+          <li>Up to 3 passengers</li>
+          <li>3 pieces of luggage</li>
+          <li>Professional chauffeur</li>
+          <li>Wi-Fi &amp; phone charger</li>
+          <li>Water &amp; mints</li>
+          <li class="na">Leather seating upgrade</li>
+          <li class="na">Premium amenities kit</li>
+        </ul>
+        <a href="booking.html" class="btn btn-outline" style="width:100%;justify-content:center;">Book Business Class</a>
+      </div>
+
+      <div class="pricing-card featured">
+        <div class="section-label">First Class</div>
+        <h3>Mercedes S-Class or similar</h3>
+        <div class="price">From $110</div>
+        <p class="price-note">per ride · fixed price</p>
+        <ul class="pricing-features">
+          <li>Up to 3 passengers</li>
+          <li>4 pieces of luggage</li>
+          <li>Senior chauffeur</li>
+          <li>Wi-Fi &amp; phone charger</li>
+          <li>Water, mints &amp; newspapers</li>
+          <li>Leather seating upgrade</li>
+          <li>Premium amenities kit</li>
+        </ul>
+        <a href="booking.html" class="btn btn-primary" style="width:100%;justify-content:center;">Book First Class</a>
+      </div>
+
+      <div class="pricing-card">
+        <div class="section-label">Business Van</div>
+        <h3>Mercedes V-Class or similar</h3>
+        <div class="price">From $95</div>
+        <p class="price-note">per ride · fixed price</p>
+        <ul class="pricing-features">
+          <li>Up to 7 passengers</li>
+          <li>7 pieces of luggage</li>
+          <li>Professional chauffeur</li>
+          <li>Wi-Fi &amp; phone chargers</li>
+          <li>Water &amp; mints</li>
+          <li class="na">Leather seating upgrade</li>
+          <li class="na">Premium amenities kit</li>
+        </ul>
+        <a href="booking.html" class="btn btn-outline" style="width:100%;justify-content:center;">Book Business Van</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CORPORATE BANNER -->
+<div class="corporate-banner">
+  <div class="container">
+    <h2>Ready to <strong>get started?</strong></h2>
+    <p>Book your first ride in under 2 minutes. No account needed.</p>
+    <a href="booking.html" class="btn btn-dark btn-lg">Book Now</a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="footer">
+  <div class="container">
+    <div class="footer-bottom" style="border-top:none;padding-top:0;">
+      <a href="index.html" class="navbar-logo" style="font-size:1.1rem;">
+        <div class="logo-icon">L</div>
+        LUXLANE
+      </a>
+      <p>&copy; 2026 Luxlane GmbH. All rights reserved.</p>
+      <div class="footer-legal">
+        <a href="#">Privacy Policy</a>
+        <a href="#">Terms</a>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<script src="assets/js/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+services:
+  - type: web
+    name: luxlane
+    runtime: python
+    plan: free
+    buildCommand: ""          # nothing to build — stdlib only
+    startCommand: python3 server.py
+    envVars:
+      - key: STRIPE_SECRET_KEY
+        sync: false           # set in the Render dashboard (keep it secret)
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: MAPBOX_ACCESS_TOKEN
+        sync: false
+      - key: LUXLANE_CURRENCY
+        value: usd

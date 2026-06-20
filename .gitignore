@@ -1,0 +1,12 @@
+# Runtime data store (use Postgres in production via DATABASE_URL)
+data/
+
+# OS / editor
+.DS_Store
+
+# Local tooling / preview config
+.claude/
+
+# Python
+__pycache__/
+*.pyc

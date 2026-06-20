@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <title>Luxlane Driver</title>
+  <meta name="theme-color" content="#0a0a0a" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <link rel="manifest" href="manifest.webmanifest" />
+  <link rel="apple-touch-icon" href="assets/img/icon.svg" />
+  <link rel="icon" href="assets/img/icon.svg" />
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <link rel="stylesheet" href="assets/css/driver.css" />
+</head>
+<body>
+<div class="app">
+
+  <!-- LOGIN -->
+  <div class="login" id="login">
+    <div class="logo-icon">L</div>
+    <h1>Luxlane <span class="gold">Driver</span></h1>
+    <p class="sub" id="driverAuthSub">Sign in to start accepting rides</p>
+    <form id="loginForm">
+      <div class="form-group" id="driverNameGroup" style="display:none;">
+        <label class="form-label">Full Name</label>
+        <input class="form-control" id="driverName" type="text" placeholder="e.g. Alex Carter" autocomplete="name" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-control" id="driverEmail" type="email" placeholder="you@email.com" autocomplete="email" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Password</label>
+        <input class="form-control" id="driverPassword" type="password" placeholder="••••••••" autocomplete="current-password" />
+      </div>
+      <button class="btn btn-primary btn-lg" id="driverAuthSubmit" type="submit" style="width:100%;justify-content:center;">Sign In</button>
+    </form>
+    <p class="modal-switch" id="driverAuthSwitch" style="margin-top:20px;text-align:center;font-size:0.85rem;color:var(--gray);">
+      New driver? <a id="driverAuthToggle" style="color:var(--gold);font-weight:600;cursor:pointer;">Create an account</a>
+    </p>
+    <p class="hint">Demo — register with any email and a 6+ character password.<br/>This is the driver side of the Luxlane platform.</p>
+  </div>
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="brand">
+      <div class="logo-icon" style="width:34px;height:34px;font-size:1rem;">L</div>
+      <div>LUXLANE<small>DRIVER</small></div>
+    </div>
+    <div class="online-toggle">
+      <span class="online-label" id="onlineLabel">Offline</span>
+      <div class="switch" id="onlineSwitch" role="switch" aria-checked="false"></div>
+    </div>
+  </div>
+
+  <!-- BODY -->
+  <div class="app-body" id="appBody">
+
+    <!-- RIDES (available pool) -->
+    <div class="view active" id="view-rides">
+      <div class="status-banner" id="statusBanner">You're offline. Go online to receive ride requests.</div>
+      <div class="tab-title">Available Rides</div>
+      <div class="tab-sub" id="ridesSub">Accept a ride to add it to your schedule.</div>
+      <div id="ridesList"></div>
+    </div>
+
+    <!-- ACTIVE (my accepted rides) -->
+    <div class="view" id="view-active">
+      <div class="tab-title">My Rides</div>
+      <div class="tab-sub">Your accepted and in-progress trips.</div>
+      <div id="activeList"></div>
+    </div>
+
+    <!-- EARNINGS -->
+    <div class="view" id="view-earn">
+      <div class="tab-title">Earnings</div>
+      <div class="tab-sub">Completed trips and payouts.</div>
+      <div class="earn-hero">
+        <div class="big" id="earnTotal">$0.00</div>
+        <div class="lbl">Total Earned</div>
+      </div>
+      <div class="earn-stats">
+        <div class="earn-stat"><div class="n" id="earnTrips">0</div><div class="l">Trips Done</div></div>
+        <div class="earn-stat"><div class="n" id="earnAvg">$0</div><div class="l">Avg / Trip</div></div>
+      </div>
+      <div id="earnList"></div>
+    </div>
+
+    <!-- PROFILE -->
+    <div class="view" id="view-profile">
+      <div class="tab-title">Profile</div>
+      <div class="tab-sub">Your driver account.</div>
+      <div class="ride-card">
+        <div style="display:flex;align-items:center;gap:14px;margin-bottom:18px;">
+          <div class="logo-icon" id="profAvatar" style="width:52px;height:52px;font-size:1.4rem;">D</div>
+          <div>
+            <div style="font-weight:600;font-size:1.05rem;" id="profName">Driver</div>
+            <div style="font-size:0.78rem;color:var(--gray);" id="profId">—</div>
+          </div>
+        </div>
+        <div class="ride-meta" style="border-top:none;padding-top:0;">
+          <span>⭐ <b>4.9</b> rating</span>
+          <span>🚗 <b id="profVehicle">Business Class</b></span>
+          <span>✅ Verified</span>
+        </div>
+      </div>
+      <button class="btn btn-outline" id="logoutBtn" style="width:100%;justify-content:center;">Sign Out</button>
+    </div>
+
+  </div>
+
+  <!-- BOTTOM TABBAR -->
+  <div class="tabbar" id="tabbar">
+    <div class="tab active" data-view="rides"><span class="ic">🧭</span><span class="lab">Rides</span><span class="badge" id="ridesBadge" style="display:none;">0</span></div>
+    <div class="tab" data-view="active"><span class="ic">🚘</span><span class="lab">My Rides</span><span class="badge" id="activeBadge" style="display:none;">0</span></div>
+    <div class="tab" data-view="earn"><span class="ic">💰</span><span class="lab">Earnings</span></div>
+    <div class="tab" data-view="profile"><span class="ic">👤</span><span class="lab">Profile</span></div>
+  </div>
+
+</div>
+
+<script src="assets/js/driver.js"></script>
+</body>
+</html>

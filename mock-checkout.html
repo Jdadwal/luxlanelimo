@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure Checkout — Luxlane</title>
+  <link rel="stylesheet" href="assets/css/style.css" />
+  <style>
+    body { background: var(--dark); display: flex; min-height: 100vh; }
+    .checkout-wrap { margin: auto; width: 100%; max-width: 440px; padding: 40px 24px; }
+    .checkout-card {
+      background: var(--dark-2); border: 1px solid var(--border);
+      border-radius: 14px; padding: 36px; box-shadow: var(--shadow);
+    }
+    .checkout-brand { display:flex; align-items:center; gap:10px; justify-content:center; margin-bottom:8px; font-weight:700; letter-spacing:0.05em; }
+    .mock-badge {
+      text-align:center; font-size:0.7rem; letter-spacing:0.1em; text-transform:uppercase;
+      color: var(--gray); margin-bottom: 28px;
+    }
+    .checkout-amount { text-align:center; margin-bottom: 28px; }
+    .checkout-amount .label { font-size:0.8rem; color:var(--gray); text-transform:uppercase; letter-spacing:0.1em; }
+    .checkout-amount .value { font-size:2.6rem; font-weight:300; color:var(--white); margin-top:4px; }
+    .checkout-line { background: var(--dark-3); border:1px solid var(--border); border-radius:8px; padding:18px; margin-bottom:24px; }
+    .checkout-line .name { font-weight:600; margin-bottom:4px; }
+    .checkout-line .desc { font-size:0.82rem; color:var(--gray); }
+    .pay-fields { display:flex; flex-direction:column; gap:14px; margin-bottom:24px; }
+    .secure-note { display:flex; align-items:center; gap:8px; justify-content:center; font-size:0.78rem; color:var(--gray); margin-top:18px; }
+  </style>
+</head>
+<body>
+  <div class="checkout-wrap">
+    <div class="checkout-card">
+      <div class="checkout-brand"><div class="logo-icon">L</div> LUXLANE</div>
+      <div class="mock-badge">⚠ Demo checkout — no real card needed</div>
+
+      <div class="checkout-amount">
+        <div class="label">Amount due</div>
+        <div class="value" id="amount">—</div>
+      </div>
+
+      <div class="checkout-line">
+        <div class="name" id="lineName">Loading…</div>
+        <div class="desc" id="lineDesc"></div>
+      </div>
+
+      <div class="pay-fields">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-control" id="email" type="email" placeholder="you@email.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Card information</label>
+          <input class="form-control" id="card" type="text" value="4242 4242 4242 4242" />
+        </div>
+        <div style="display:flex;gap:14px;">
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">Expiry</label>
+            <input class="form-control" id="exp" type="text" value="12 / 34" />
+          </div>
+          <div class="form-group" style="flex:1;">
+            <label class="form-label">CVC</label>
+            <input class="form-control" id="cvc" type="text" value="123" />
+          </div>
+        </div>
+      </div>
+
+      <button class="btn btn-primary btn-lg" id="payBtn" style="width:100%;justify-content:center;">Pay <span id="payAmount"></span></button>
+      <button class="btn btn-dark btn-sm" id="cancelBtn" style="width:100%;justify-content:center;margin-top:12px;">Cancel and return</button>
+
+      <div class="secure-note">🔒 Test mode · powered by a Stripe-style flow</div>
+    </div>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(location.search);
+    const sid = params.get('session_id');
+    let session = null;
+
+    function fmt(cents, cur) {
+      return new Intl.NumberFormat('en-US', { style: 'currency', currency: (cur || 'usd').toUpperCase() }).format(cents / 100);
+    }
+
+    async function load() {
+      try {
+        const r = await fetch('/api/mock-session?session_id=' + encodeURIComponent(sid));
+        if (!r.ok) throw new Error('not found');
+        session = await r.json();
+        const amt = fmt(session.amount, session.currency);
+        document.getElementById('amount').textContent = amt;
+        document.getElementById('payAmount').textContent = amt;
+        document.getElementById('lineName').textContent = session.label;
+        document.getElementById('lineDesc').textContent = session.desc;
+        if (session.email) document.getElementById('email').value = session.email;
+      } catch (e) {
+        document.getElementById('lineName').textContent = 'Session expired';
+        document.getElementById('lineDesc').textContent = 'Please return and try again.';
+      }
+    }
+
+    document.getElementById('payBtn').addEventListener('click', async () => {
+      const btn = document.getElementById('payBtn');
+      btn.disabled = true; btn.textContent = 'Processing…';
+      try {
+        const r = await fetch('/api/mock-pay', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ session_id: sid })
+        });
+        const data = await r.json();
+        location.href = data.success_url;
+      } catch (e) {
+        btn.disabled = false; btn.textContent = 'Pay';
+        alert('Payment failed — please retry.');
+      }
+    });
+
+    document.getElementById('cancelBtn').addEventListener('click', () => {
+      if (session && session.cancel_url) location.href = session.cancel_url;
+      else location.href = '/booking.html?canceled=1';
+    });
+
+    load();
+  </script>
+</body>
+</html>
