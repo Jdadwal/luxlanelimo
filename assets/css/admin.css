@@ -1,0 +1,63 @@
+/* ===========================
+   LUXLANE — ADMIN DASHBOARD
+   (loads after style.css)
+   =========================== */
+
+body { overflow-x: hidden; }
+
+/* ---- Login ---- */
+.admin-login { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center; padding: 24px; background: var(--black); }
+.admin-login-card { width: 100%; max-width: 380px; background: var(--dark-2); border: 1px solid var(--border); border-radius: 14px; padding: 36px; }
+
+/* ---- App shell ---- */
+.admin-app { min-height: 100vh; }
+.admin-header {
+  position: sticky; top: 0; z-index: 10;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 14px 24px; background: var(--dark); border-bottom: 1px solid var(--border);
+}
+.admin-brand { display: flex; align-items: center; gap: 10px; font-weight: 700; letter-spacing: 0.04em; }
+.admin-body { max-width: 1200px; margin: 0 auto; padding: 24px; }
+
+/* ---- Stats ---- */
+.admin-stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 14px; margin-bottom: 24px; }
+.admin-stat { background: var(--dark-2); border: 1px solid var(--border); border-radius: 10px; padding: 18px; }
+.admin-stat .n { font-size: 1.7rem; font-weight: 300; }
+.admin-stat .n.gold { color: var(--gold); }
+.admin-stat .l { font-size: 0.72rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.06em; margin-top: 4px; }
+
+/* ---- Toolbar ---- */
+.admin-toolbar { display: flex; justify-content: space-between; align-items: center; gap: 16px; margin-bottom: 18px; flex-wrap: wrap; }
+.admin-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.admin-filter { font-size: 0.8rem; padding: 8px 14px; border-radius: 100px; border: 1px solid var(--border); color: var(--gray); cursor: pointer; transition: var(--transition); }
+.admin-filter span { opacity: 0.7; margin-left: 4px; }
+.admin-filter.active, .admin-filter:hover { background: var(--gold); border-color: var(--gold); color: var(--black); }
+.admin-search { max-width: 280px; }
+
+/* ---- Booking cards ---- */
+.admin-card { display: grid; grid-template-columns: 1fr 230px; gap: 20px; background: var(--dark-2); border: 1px solid var(--border); border-radius: 10px; padding: 20px; margin-bottom: 14px; }
+.admin-ref { font-weight: 700; font-size: 1rem; color: var(--gold); display: flex; align-items: center; gap: 10px; }
+.admin-when { font-size: 0.8rem; color: var(--gray); margin: 4px 0 12px; }
+.admin-route { display: flex; flex-direction: column; gap: 4px; font-size: 0.9rem; margin-bottom: 12px; }
+.admin-meta { display: flex; flex-wrap: wrap; gap: 14px; font-size: 0.8rem; color: var(--gray); padding-top: 12px; border-top: 1px solid var(--border); }
+.admin-meta .gold { color: var(--gold); font-weight: 600; }
+
+.admin-card-actions { border-left: 1px solid var(--border); padding-left: 20px; display: flex; flex-direction: column; }
+.admin-act-lbl { font-size: 0.68rem; color: var(--gray); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 5px; }
+.admin-sel { margin-bottom: 12px; padding: 9px 12px; font-size: 0.85rem; }
+
+.admin-pill { font-size: 0.62rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; padding: 3px 9px; border-radius: 100px; }
+.admin-pill.available { background: rgba(201,168,76,0.15); color: var(--gold); }
+.admin-pill.assigned { background: rgba(201,168,76,0.2); color: var(--gold-light); }
+.admin-pill.arrived { background: rgba(90,160,230,0.16); color: #7db4ec; }
+.admin-pill.on_trip { background: rgba(110,200,120,0.16); color: #6ec878; }
+.admin-pill.completed { background: rgba(150,150,150,0.16); color: var(--gray); }
+.admin-pill.cancelled { background: rgba(224,82,82,0.14); color: #e87171; }
+
+.admin-empty { text-align: center; padding: 60px; color: var(--gray); background: var(--dark-2); border: 1px dashed var(--border); border-radius: 10px; }
+
+@media (max-width: 900px) {
+  .admin-stats { grid-template-columns: repeat(2, 1fr); }
+  .admin-card { grid-template-columns: 1fr; }
+  .admin-card-actions { border-left: none; border-top: 1px solid var(--border); padding-left: 0; padding-top: 16px; }
+}

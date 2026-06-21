@@ -30,6 +30,7 @@ import time
 import hmac
 import uuid
 import hashlib
+import base64
 import secrets
 import smtplib
 import threading
@@ -68,6 +69,21 @@ WHATSAPP_NUMBER = os.environ.get("WHATSAPP_NUMBER", "14166762669").strip()
 # replies, so the concierge works either way. (anthropic SDK imported lazily.)
 ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY", "").strip()
 CONCIERGE_MODEL = os.environ.get("CONCIERGE_MODEL", "claude-opus-4-8").strip()
+
+# Admin dashboard password. CHANGE THIS in production by setting ADMIN_PASSWORD.
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "admin1234").strip()
+
+# SMS (Twilio). Sends real texts when all three are set; otherwise logs them so
+# the flow is testable without an account. Secrets come from the environment only.
+TWILIO_ACCOUNT_SID = os.environ.get("TWILIO_ACCOUNT_SID", "").strip()
+TWILIO_AUTH_TOKEN = os.environ.get("TWILIO_AUTH_TOKEN", "").strip()
+TWILIO_FROM_NUMBER = os.environ.get("TWILIO_FROM_NUMBER", "").strip()
+# Optional: authenticate with a Twilio API Key (SK… + secret) instead of the
+# Auth Token — recommended. Still needs TWILIO_ACCOUNT_SID for the request URL.
+TWILIO_API_KEY_SID = os.environ.get("TWILIO_API_KEY_SID", "").strip()
+TWILIO_API_KEY_SECRET = os.environ.get("TWILIO_API_KEY_SECRET", "").strip()
+# Where new-booking SMS alerts go (defaults to the business line).
+ADMIN_SMS_TO = os.environ.get("ADMIN_SMS_TO", COMPANY_PHONE_E164).strip()
 
 # Pricing source of truth — must mirror assets/js/app.js FLEET base/perKm.
 FLEET = {
@@ -469,6 +485,33 @@ def send_email(to, subject, body):
         print("[email] send failed (%s)" % e, flush=True)
 
 
+def send_sms(to, body):
+    """Send an SMS via Twilio when configured, otherwise log it. Never raises.
+    Uses an API Key (SK… + secret) when provided, else the Account Auth Token."""
+    to = (to or "").strip()
+    # Credentials for HTTP Basic auth: API key preferred, Auth Token fallback.
+    if TWILIO_API_KEY_SID and TWILIO_API_KEY_SECRET:
+        cred_user, cred_secret = TWILIO_API_KEY_SID, TWILIO_API_KEY_SECRET
+    else:
+        cred_user, cred_secret = TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN
+    if not (TWILIO_ACCOUNT_SID and cred_secret and TWILIO_FROM_NUMBER and to):
+        print("[sms] (not configured) to=%s body=%r" % (to, body[:60]), flush=True)
+        return
+    try:
+        url = "https://api.twilio.com/2010-04-01/Accounts/%s/Messages.json" % TWILIO_ACCOUNT_SID
+        data = urllib.parse.urlencode({"To": to, "From": TWILIO_FROM_NUMBER, "Body": body}).encode()
+        auth = base64.b64encode(("%s:%s" % (cred_user, cred_secret)).encode()).decode()
+        req = urllib.request.Request(url, data=data, headers={
+            "Authorization": "Basic " + auth,
+            "Content-Type": "application/x-www-form-urlencoded",
+        })
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            resp.read()
+        print("[sms] sent to %s" % to, flush=True)
+    except Exception as e:  # noqa: BLE001
+        print("[sms] send failed (%s)" % e, flush=True)
+
+
 # ---------------------------------------------------------------- concierge
 def business_facts():
     return (
@@ -637,6 +680,8 @@ class Handler(SimpleHTTPRequestHandler):
             return self.handle_list_rides()
         if path == "/api/rides/track":
             return self.handle_ride_track()
+        if path == "/api/admin/bookings":
+            return self.handle_admin_bookings()
         if path == "/api/auth/me":
             return self.handle_auth_me()
         if path == "/api/config":
@@ -675,6 +720,10 @@ class Handler(SimpleHTTPRequestHandler):
             return self.handle_auth_logout()
         if path == "/api/concierge":
             return self.handle_concierge()
+        if path == "/api/admin/login":
+            return self.handle_admin_login()
+        if path == "/api/admin/update":
+            return self.handle_admin_update()
         if path == "/api/rides/accept":
             return self.handle_ride_accept()
         if path == "/api/rides/status":
@@ -828,6 +877,15 @@ class Handler(SimpleHTTPRequestHandler):
                 COMPANY_EMAIL, "New booking #%s — %s" % (rec["ref"], rec.get("service", "")),
                 "New reservation received.\n\n%s\n\nPassenger: %s\nEmail: %s\nPhone: %s"
                 % (details, rec.get("passenger", ""), rec.get("email", ""), rec.get("phone", "")))
+            # SMS: confirm to the customer + alert the business
+            if rec.get("phone"):
+                send_sms(rec["phone"],
+                         "%s: your ride #%s is confirmed for %s (%s). Track it from My Trips. Questions? %s"
+                         % (COMPANY_NAME, rec["ref"], rec.get("dateISO", "TBD"), rec.get("vehicle", ""), COMPANY_PHONE))
+            send_sms(ADMIN_SMS_TO,
+                     "New booking #%s: %s, %s -> %s, %s, $%s (%s)"
+                     % (rec["ref"], rec.get("service", ""), rec.get("pickup", ""), rec.get("dropoff", ""),
+                        rec.get("vehicle", ""), rec.get("total", ""), rec.get("passenger", "")))
         return self._json({"ok": True, "ref": rec["ref"]})
 
     def handle_list_rides(self):
@@ -916,6 +974,76 @@ class Handler(SimpleHTTPRequestHandler):
             source = "scripted"
         return self._json({"reply": reply, "source": source})
 
+    # ---- admin dashboard ----
+    def _admin_ok(self):
+        token = self._auth_token()
+        s = SESSIONS.get(token) if token else None
+        if not s or s.get("role") != "admin":
+            return False
+        if s["exp"] < int(time.time() * 1000):
+            SESSIONS.pop(token, None)
+            return False
+        return True
+
+    def handle_admin_login(self):
+        data, _ = self._read_json()
+        if not ADMIN_PASSWORD or (data.get("password") or "") != ADMIN_PASSWORD:
+            return self._json({"error": "Incorrect admin password."}, 401)
+        token = secrets.token_urlsafe(32)
+        SESSIONS[token] = {"email": "admin", "role": "admin",
+                           "exp": int(time.time() * 1000) + SESSION_TTL_MS}
+        return self._json({"token": token, "role": "admin"})
+
+    def handle_admin_bookings(self):
+        if not self._admin_ok():
+            return self._json({"error": "Not authorized."}, 401)
+        with _BOOKINGS_LOCK:
+            items = list(BOOKINGS.values())
+        items.sort(key=lambda b: b.get("createdAt", 0), reverse=True)
+        active_statuses = ("available", "assigned", "arrived", "on_trip")
+        completed = [b for b in items if b.get("status") == "completed"]
+        revenue = round(sum(float(b.get("total") or 0) for b in completed), 2)
+        stats = {
+            "total": len(items),
+            "revenue": revenue,
+            "upcoming": len([b for b in items if b.get("status") in active_statuses]),
+            "completed": len(completed),
+            "cancelled": len([b for b in items if b.get("status") == "cancelled"]),
+        }
+        drivers = sorted({b.get("driverName") for b in items if b.get("driverName")})
+        drivers += [u["name"] for u in USERS.values()
+                    if u.get("role") == "driver" and u["name"] not in drivers]
+        return self._json({"bookings": items, "stats": stats, "drivers": drivers})
+
+    def handle_admin_update(self):
+        if not self._admin_ok():
+            return self._json({"error": "Not authorized."}, 401)
+        data, _ = self._read_json()
+        ref = (data.get("ref") or "").lstrip("#").strip()
+        valid = ("available", "assigned", "arrived", "on_trip", "completed", "cancelled")
+        now = int(time.time() * 1000)
+        with _BOOKINGS_LOCK:
+            b = BOOKINGS.get(ref)
+            if not b:
+                return self._json({"error": "Booking not found."}, 404)
+            if "status" in data and data["status"] in valid:
+                b["status"] = data["status"]
+                if data["status"] == "completed":
+                    b["completedAt"] = now
+                if data["status"] == "available":
+                    b["driverId"] = None
+                    b["driverName"] = None
+            if "driverName" in data:
+                name = (data.get("driverName") or "").strip()
+                b["driverName"] = name or None
+                b["driverId"] = (re.sub(r"[^a-z0-9]+", "-", name.lower()).strip("-") or None) if name else None
+                if name and b.get("status") == "available":
+                    b["status"] = "assigned"
+            b["updatedAt"] = now
+            persist_bookings()
+            rec = dict(b)
+        return self._json({"ok": True, "booking": rec})
+
     def handle_ride_accept(self):
         data, _ = self._read_json()
         ref = (data.get("ref") or "").lstrip("#").strip()
@@ -965,6 +1093,11 @@ class Handler(SimpleHTTPRequestHandler):
                 b["completedAt"] = now
             persist_bookings()
             ride = dict(b)
+        # Text the customer when the chauffeur arrives.
+        if status == "arrived" and ride.get("phone"):
+            send_sms(ride["phone"],
+                     "%s: your chauffeur has arrived at %s for ride #%s. %s"
+                     % (COMPANY_NAME, ride.get("pickup", "your pick-up"), ride["ref"], COMPANY_PHONE))
         return self._json({"ok": True, "ride": ride})
 
     def handle_ride_location(self):
